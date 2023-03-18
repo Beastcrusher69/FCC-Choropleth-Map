@@ -19,11 +19,15 @@ let req1 = new XMLHttpRequest();
 
         let data = JSON.parse(req2.responseText)    
         countyData = topojson.feature(data,data.objects.counties).features;
-
-        let min = d3.min(educationData,(item) => { return item.bachelorsOrHigher})
-        let max = d3.max(educationData,(item) => { return item.bachelorsOrHigher})
-        let part = (max - min)/4;    
+    
         let canvas = d3.select('#canvas');
+        let colors=[
+            "#92DAE2",
+            "#59C1CE",
+            "#1AA3B4",
+            "#0096A8"
+        ]
+        let tooltip = d3.select("#tooltip");
 
         canvas.attr("width",width)
             .attr("height",height);  
@@ -42,19 +46,49 @@ let req1 = new XMLHttpRequest();
             .attr("fill",(d) => {
                 let per = d.bachelorsOrHigher;
 
-                if(per>=min && per<part){
-                    return "#92DAE2";
+                if( per<15){
+                    return colors[0];
                 }
-                else if(per>=part && per<part*2){
-                    return "#59C1CE";
+                else if(per<30){
+                    return colors[1];
                 }
-                else if(per>=part*2 && per<part*3){
-                    return "#1AA3B4";
+                else if(per<45){
+                    return colors[2];
                 }
                 else{
-                    return "#0096A8";                   
+                    return colors[3];                   
                 }
-              })    
+              })
+              .on("mouseover",(d) => {
+                 tooltip.transition().style('visibility','visible');  
+                 tooltip.attr("data-education",d.bachelorsOrHigher);
 
+                 document.getElementById("tooltip").innerHTML = "<p>" + d.area_name + "</p><p>" + d.bachelorsOrHigher + "</p>";
+              })
+              .on("mouseout",() => {
+                tooltip.transition().style('visibility','hidden');   
+              })
+
+              
+        //legend
+
+        d3.select("#legend")
+        .attr("width",150)
+        .attr("height",100)
+
+        d3.select("#legend")  
+        .selectAll("rect")
+        .attr("width",20)
+        .attr("height",20)
+        .attr("x",0)
+        .attr("transform",(d,i) => { return "translate(0," + (22*i) + ")"})
+        .data(colors)
+        .attr("fill",(d) => d) 
+        
+        d3.select("#legend")
+          .selectAll("text")
+          .data(colors)
+          .attr("x", 24)
+          .attr("transform",(d,i) => { return "translate(0," + (22*i+15) + ")"})       
     }
     }
